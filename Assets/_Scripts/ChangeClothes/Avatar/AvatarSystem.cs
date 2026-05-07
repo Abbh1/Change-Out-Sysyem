@@ -5,31 +5,33 @@ using UnityEngine.Events;
 using System.Text.RegularExpressions;
 using System.Linq;
 using ChangeClothes.Avatar;
+using Unity.VisualScripting;
 
 public class AvatarSystem : MonoBehaviour
 {
     public static AvatarSystem Instance { get; private set; }
 
+    [Header("生成位置")]
+    public Transform spawnPoint; // 角色生成位置
+
     [Header("角色模型配置")]
     public GameObject characterModelPrefab; // 角色模型预制体(含所有部位)
     public GameObject characterTargetPrefab; // 角色目标预制体（只含骨骼和初始模型）
 
-    [Header("默认装备配置"), SerializeField]
-    private List<DefaultAvatarItem> defaultAvatarItems; // 默认装备列表（部位类型 -> 索引）
+    [Header("角色部件")]
+    [SerializeField] private List<CharacterPart> _parts = new();
 
-    [Header("事件")]
-    public UnityEvent<PartType, int> OnPartChanged;
-    public UnityEvent OnRandomChanged;
+    [Header("默认装备配置")]
+    public List<DefaultAvatarItem> defaultAvatarItems = new List<DefaultAvatarItem>(); // 默认装备列表（部位类型 -> 索引）
 
-
-    #region 换装参数
+    // 换装参数 //
     private GameObject characterTarget; // 角色目标模型
     private Transform characterSourceTrans; // 角色源模型变换组件
     private Dictionary<PartType, Dictionary<int, SkinnedMeshRenderer>> characterData; // 角色数据字典（部位类型 -> 编号 -> SkinnedMeshRenderer）
     private Dictionary<PartType, SkinnedMeshRenderer> characterSmr; // 角色当前SkinnedMeshRenderer字典（部位类型 -> SkinnedMeshRenderer）
+    private Dictionary<PartType, int> currentPartNumbers; // 当前选中部位编号
     private Dictionary<string, Transform> boneMap; // 骨骼映射字典（骨骼名称 -> 骨骼变换组件）
     private Transform[] characterHips; // 角色骨骼数组
-    #endregion
 
 
     #region Unity生命周期
@@ -40,6 +42,7 @@ public class AvatarSystem : MonoBehaviour
             Instance = this;
             characterData = new Dictionary<PartType, Dictionary<int, SkinnedMeshRenderer>>();
             characterSmr = new Dictionary<PartType, SkinnedMeshRenderer>();
+            currentPartNumbers = new Dictionary<PartType, int>();
             boneMap = new Dictionary<string, Transform>();
         }
         else
@@ -48,14 +51,14 @@ public class AvatarSystem : MonoBehaviour
         }
     }
 
-    void Start()
+    private void OnEnable()
     {
-        InitializeAvatar();
+        EventController.Instance.OnPartChanged += ChangePart;
     }
 
-    void OnDisable()
+    private void OnDisable()
     {
-        OnPartChanged = null;
+        EventController.Instance.OnPartChanged -= ChangePart;
     }
     #endregion
 
@@ -64,7 +67,7 @@ public class AvatarSystem : MonoBehaviour
     /// <summary>
     /// 初始化角色模型，加载数据并设置默认装备
     /// </summary>
-    private void InitializeAvatar()
+    public void Init()
     {
         if (characterModelPrefab == null || characterTargetPrefab == null)
         {
@@ -75,8 +78,6 @@ public class AvatarSystem : MonoBehaviour
         InitSourceCharacter(); // 初始化源模型
         InitTargetCharacter(); // 初始化目标模型
         SaveData(characterSourceTrans, characterData, characterSmr, characterTarget);
-        CreateBoneDictionary();
-        InitDefaultAvatar();
     }
 
     /// <summary>
@@ -101,6 +102,8 @@ public class AvatarSystem : MonoBehaviour
         }
 
         characterTarget = Instantiate(characterTargetPrefab);
+        characterTarget.transform.SetPositionAndRotation(spawnPoint.position, spawnPoint.rotation);
+        characterTarget.transform.localScale = spawnPoint.localScale;
         characterTarget.SetActive(true);
 
         // 查找 Bone 子物体
@@ -142,6 +145,37 @@ public class AvatarSystem : MonoBehaviour
             }
         }
 
+    }
+
+    /// <summary>
+    /// 初始化默认装备
+    /// </summary>
+    public void InitDefaultAvatar()
+    {
+        if (defaultAvatarItems.Count == 0) InitDefaultItems();
+        foreach (var item in defaultAvatarItems)
+        {
+            EventController.Instance.RaisePartChanged(item.partType, item.index);
+            // ChangeMesh(item.partType, item.index, characterData, characterSmr, characterHips);
+        }
+    }
+
+    /// <summary>
+    /// 初始化初始装备
+    /// </summary>
+    private void InitDefaultItems()
+    {
+        defaultAvatarItems.Clear();
+        foreach (PartType item in Enum.GetValues(typeof(PartType)))
+        {
+            if (item == PartType.None) continue;
+
+            defaultAvatarItems.Add(new DefaultAvatarItem
+            {
+                partType = item,
+                index = 1
+            });
+        }
     }
     #endregion
 
@@ -192,31 +226,31 @@ public class AvatarSystem : MonoBehaviour
             if (!data.ContainsKey(partType))
             {
                 GameObject go = new GameObject();
-                go.name = partName;
-                go.transform.SetParent(target.transform);
+                go.name = partName + "_" + num;
+                go.transform.SetParent(target.transform, false);
+
+                // ✅ 添加 CharacterPart
+                var cp = go.AddComponent<CharacterPart>();
+                cp.PartType = StrParse.ParsePartType(partName);
+                cp.CurrentIndex = num;
+                cp.IsOnlyEquip = false;
+                // ✅ 关键：加入 _parts 列表
+                _parts.Add(cp);
+
+
                 smr[partType] = go.AddComponent<SkinnedMeshRenderer>();
                 data[partType] = new Dictionary<int, SkinnedMeshRenderer>();
             }
 
             data[partType][num] = part;
         }
+
     }
 
     #endregion
 
 
     #region 换装实现
-    /// <summary>
-    /// 初始化默认装备
-    /// </summary>
-    private void InitDefaultAvatar()
-    {
-        foreach (var item in defaultAvatarItems)
-        {
-            ChangeMesh(item.partType, item.index, characterData, characterSmr, characterHips);
-        }
-    }
-
     /// <summary>
     /// 切换角色部位的装备
     /// </summary>
@@ -225,7 +259,7 @@ public class AvatarSystem : MonoBehaviour
     /// <param name="data">数据字典</param>
     /// <param name="smr">SkinnedMeshRenderer字典</param>
     /// <param name="hips">骨骼数组</param>
-    private void ChangeMesh(
+    private bool ChangeMesh(
     PartType part,
     int num,
     Dictionary<PartType, Dictionary<int, SkinnedMeshRenderer>> data,
@@ -236,14 +270,14 @@ public class AvatarSystem : MonoBehaviour
         if (data == null || !data.ContainsKey(part) || !data[part].ContainsKey(num))
         {
             Debug.LogWarning($"ChangeMesh: 找不到对应的部位或编号 - 部位: {part}, 编号: {num}");
-            return;
+            return false;
         }
 
         SkinnedMeshRenderer skm = data[part][num];
         if (skm == null)
         {
             Debug.LogWarning($"ChangeMesh: 找不到对应的SkinnedMeshRenderer - 部位: {part}, 编号: {num}");
-            return;
+            return false;
         }
 
         // 从源模型的SkinnedMeshRenderer中获取骨骼并映射到目标模型的骨骼上
@@ -266,17 +300,23 @@ public class AvatarSystem : MonoBehaviour
         // 换装实现
         if (smr.ContainsKey(part) && smr[part] != null)
         {
-            smr[part].bones = bones.ToArray();      // 更新骨骼
-            smr[part].rootBone = bones[0];          // 更新根骨骼
-            smr[part].materials = skm.materials;    // 更新材质
-            smr[part].sharedMesh = skm.sharedMesh;  // 更新网格
+            var targetSmr = smr[part];
+            if (bones.Count > 0)
+            {
+                targetSmr.bones = bones.ToArray();      // 更新骨骼
+                targetSmr.rootBone = bones[0];          // 更新根骨骼
+            }
+            targetSmr.materials = skm.materials;    // 更新材质
+            targetSmr.sharedMesh = skm.sharedMesh;  // 更新网格
+            currentPartNumbers[part] = num;
             Debug.Log($"换装成功: {part} - {num}");
+            return true;
         }
         else
         {
             Debug.LogWarning($"ChangeMesh: 找不到对应的目标SkinnedMeshRenderer - 部位: {part}");
+            return false;
         }
-
     }
 
     /// <summary>
@@ -286,7 +326,10 @@ public class AvatarSystem : MonoBehaviour
     {
         if (Enum.TryParse(partName, out PartType partType))
         {
-            ChangeMesh(partType, index, characterData, characterSmr, characterHips);
+            if (!ChangeMesh(partType, index, characterData, characterSmr, characterHips))
+            {
+                Debug.LogWarning($"AvatarSystem.ChangeMesh: 无效部位或索引 - {partName}:{index}");
+            }
         }
         else
         {
@@ -300,12 +343,16 @@ public class AvatarSystem : MonoBehaviour
     public void ChangePart(PartType partType, int index)
     {
         ChangeMesh(partType, index, characterData, characterSmr, characterHips);
-        RaisePartChangedEvent(partType, index);
     }
     #endregion
 
 
     #region 工具方法
+    /// <summary>
+    /// 根据部位类型获取对应的 CharacterPart 组件
+    /// </summary>
+    public CharacterPart CurrentCharacterPartByType(PartType type) => _parts.FirstOrDefault(p => p.PartType == type);
+
     /// <summary>
     /// 获取指定部位的所有可用编号
     /// </summary>
@@ -322,37 +369,21 @@ public class AvatarSystem : MonoBehaviour
     }
 
     /// <summary>
-    /// 根据部位类型获取对应的 AvatarSystem CharacterPart 数据对象
+    /// 获取指定部位的可用数量
     /// </summary>
-    /// <param name="partType">部位类型</param>
-    public CharacterPart GetCharacterPartByType(PartType partType)
+    public int GetPartCount(PartType partType)
     {
-        if (characterData.TryGetValue(partType, out var partDict) && partDict.Count > 0)
-        {
-            var sortedIndexes = partDict.Keys.OrderBy(x => x).ToList();
-            return new CharacterPart
-            {
-                PartType = partType,
-                CurrentPartsObjects = sortedIndexes.Select(index => partDict[index].gameObject).ToList(),
-                PartIndexes = sortedIndexes,
-                CurrentIndex = 0
-            };
-        }
-        return null;
+        return characterData.TryGetValue(partType, out var partDict) ? partDict.Count : 0;
     }
-    
+
+    /// <summary>
+    /// 获取所有部位的可用数量
+    /// </summary>
+    public Dictionary<PartType, int> GetAllPartCounts()
+    {
+        return characterData.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count);
+    }
+
     #endregion
 
-
-    #region 事件触发
-    public void RaisePartChangedEvent(PartType partType, int index)
-    {
-        OnPartChanged?.Invoke(partType, index);
-    }
-
-    public void RaiseRandomChangedEvent()
-    {
-        OnRandomChanged?.Invoke();
-    }
-    #endregion
 }

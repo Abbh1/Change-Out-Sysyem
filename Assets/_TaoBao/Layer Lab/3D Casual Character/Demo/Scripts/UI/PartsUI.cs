@@ -11,6 +11,7 @@ namespace Layer_lab._3D_Casual_Character
 
         private Parts[] PartsArray;
 
+        [System.Obsolete]
         public void Init()
         {
             PartsArray = FindObjectsOfType<Parts>();

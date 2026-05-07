@@ -10,25 +10,57 @@ public static class StrParse
     /// </summary>
     public static string[] ParsePartName(string name)
     {
-        if (string.IsNullOrEmpty(name)) return null;
+        if (string.IsNullOrEmpty(name))
+            return null;
 
         int lastUnderscore = name.LastIndexOf('_');
-        if (lastUnderscore <= 0) return null;
+        if (lastUnderscore <= 0 || lastUnderscore == name.Length - 1)
+            return null;
 
-        // 提取编号
+        string prefix = name.Substring(0, lastUnderscore);
         string numStr = name.Substring(lastUnderscore + 1);
-        if (!int.TryParse(numStr, out _)) return null;
 
-        // 提取基础部位（第一个_之前的部分）
-        int firstUnderscore = name.IndexOf('_');
-        if (firstUnderscore <= 0)
+        if (!int.TryParse(numStr, out _))
+            return null;
+
+        string matchedPrefix = null;
+        int maxLength = 0;
+
+        foreach (var kv in PartNameMap.PrefixByType)
         {
-            // 没有其他_，说明是 Eye_1 这种格式
-            return new[] { name.Substring(0, lastUnderscore), numStr };
+            if (prefix.StartsWith(kv.Value) && kv.Value.Length > maxLength)
+            {
+                maxLength = kv.Value.Length;
+                matchedPrefix = kv.Value;
+            }
         }
 
-        // 返回第一个_之前的部分
-        return new[] { name.Substring(0, firstUnderscore), numStr };
+        if (matchedPrefix == null)
+            return null;
+
+        return new[] { matchedPrefix, numStr };
+    }
+
+    /// <summary>
+    /// 解析部件名称，返回编号（如果存在）
+    /// 支持格式: Hair_Black_1 → 1
+    ///          Eye_1 → 1
+    /// </summary>
+    public static int? ParsePartIndex(string name)
+    {
+        if (string.IsNullOrEmpty(name))
+            return null;
+
+        int lastUnderscore = name.LastIndexOf('_');
+        if (lastUnderscore <= 0 || lastUnderscore == name.Length - 1)
+            return null;
+
+        string numStr = name.Substring(lastUnderscore + 1);
+
+        if (int.TryParse(numStr, out int index))
+            return index;
+
+        return null;
     }
 
 

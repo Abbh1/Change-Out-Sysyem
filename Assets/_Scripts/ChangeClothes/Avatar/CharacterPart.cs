@@ -1,64 +1,95 @@
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using ChangeClothes.Avatar;
+using System;
 
 namespace ChangeClothes.Avatar
 {
     /// <summary>
-    /// AvatarSystem 专用角色部位数据对象
+    /// 角色部件（头发 / 眼睛 / 衣服等）
+    /// 自身即为部件物体，名称格式：Hair_1
     /// </summary>
-    public class CharacterPart
+    public class CharacterPart : MonoBehaviour
     {
-        public PartType PartType { get; set; } = PartType.None;
-        public List<GameObject> CurrentPartsObjects { get; set; } = new();
-        public List<int> PartIndexes { get; set; } = new();
-        public bool IsOnlyEquip { get; set; }
-        public float EquipChance { get; set; } = 50f;
-        public int CurrentIndex { get; set; } = -1;
+        public PartType PartType { get; set; }        // 部件类型
+        public bool IsOnlyEquip { get; set; }                 // 是否独占
+        public float EquipChance { get; set; } = 50f;        // 随机概率
 
-        public string CurrentName()
+        public int CurrentIndex { get; set; } = -1;   // 当前索引
+        public int CurrentMaxLen { get; set; }        // 最大数量
+
+        private EventController Event => EventController.Instance;
+        private AvatarSystem Avatar => AvatarSystem.Instance;
+        private UIController UI => UIController.Instance;
+
+        #region Unity
+
+        private void Awake()
         {
-            return CurrentIndex < 0 || CurrentIndex >= CurrentPartsObjects.Count
-                ? string.Empty
-                : CurrentPartsObjects[CurrentIndex].name;
+            UpdateMaxLen();
         }
 
-        public int CurrentPartNumber =>
-            CurrentIndex < 0 || CurrentIndex >= PartIndexes.Count
-                ? -1
-                : PartIndexes[CurrentIndex];
-
-        public void ApplyCurrentPart()
+        private void OnEnable()
         {
-            if (AvatarSystem.Instance == null) return;
-            int partNumber = CurrentPartNumber;
-            if (partNumber < 0) return;
-            AvatarSystem.Instance.ChangeMesh(PartType.ToString(), partNumber);
-            AvatarSystem.Instance.RaisePartChangedEvent(PartType, partNumber);
+            if (!Event) return;
+            Event.OnRandomRequested += RandomPart;
+            Event.OnNextPartRequested += NextPart;
+            Event.OnPreviousPartRequested += PrevPart;
         }
 
-        public void SetCurrentIndex(int index)
+        private void OnDisable()
         {
-            if (index < 0 || index >= CurrentPartsObjects.Count)
-            {
-                CurrentIndex = -1;
-                AvatarSystem.Instance?.RaisePartChangedEvent(PartType, -1);
-                return;
-            }
-
-            CurrentIndex = index;
-            ApplyCurrentPart();
+            if (!Event) return;
+            Event.OnRandomRequested -= RandomPart;
+            Event.OnNextPartRequested -= NextPart;
+            Event.OnPreviousPartRequested -= PrevPart;
         }
 
-        public void SetupFromDictionary(Dictionary<int, SkinnedMeshRenderer> partArray)
+        #endregion
+
+        #region 事件
+
+        private void RandomPart()
         {
-            CurrentPartsObjects.Clear();
-            PartIndexes = partArray.Keys.OrderBy(x => x).ToList();
-            foreach (int partNumber in PartIndexes)
-            {
-                CurrentPartsObjects.Add(partArray[partNumber].gameObject);
-            }
-            CurrentIndex = PartIndexes.Count > 0 ? 0 : -1;
+            if (!CanChange()) return;
+            CurrentIndex = UnityEngine.Random.Range(0, CurrentMaxLen);
+            Apply();
         }
+
+        private void NextPart()
+        {
+            if (!CanChange()) return;
+            CurrentIndex = (CurrentIndex + 1) % CurrentMaxLen;
+            Apply();
+        }
+
+        private void PrevPart()
+        {
+            if (!CanChange()) return;
+            CurrentIndex = (CurrentIndex - 1 + CurrentMaxLen) % CurrentMaxLen;
+            Apply();
+        }
+
+        #endregion
+
+        /// <summary>
+        /// 通知换装系统
+        /// </summary>
+        public void Apply()
+        {
+            if (CurrentIndex < 0 || CurrentIndex >= CurrentMaxLen) return;
+            Event?.RaisePartChanged(PartType, CurrentIndex);
+        }
+
+        #region 私有
+
+        private bool CanChange() =>
+            UI && UI.FocusPartType == PartType && CurrentMaxLen > 0;
+
+        private void UpdateMaxLen()
+        {
+            if (Avatar) CurrentMaxLen = Avatar.GetPartCount(PartType);
+        }
+
+        #endregion
     }
 }
