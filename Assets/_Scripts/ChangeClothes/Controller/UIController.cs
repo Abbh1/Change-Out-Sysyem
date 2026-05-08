@@ -14,7 +14,6 @@ public class UIController : MonoBehaviour
     [Header("图标资源")]
     public Sprite[] spriteActiveIcons;  // 激活状态图标（显示/隐藏）
     public Sprite[] spriteBgs;          // 背景图（空/有物品）
-
     private ItemSolt currentHoverSlot;
 
 

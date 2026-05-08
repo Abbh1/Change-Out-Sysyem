@@ -18,6 +18,7 @@ public class EventController : MonoBehaviour
     }
 
     public void RaisePartChanged(PartType partType, int index) => OnPartChanged?.Invoke(partType, index);
+    public void RaiseClickHide(PartType partType, bool isHide) => OnClickHided?.Invoke(partType, isHide);
 
     public void RaiseRandomRequested() => OnRandomRequested?.Invoke();
 

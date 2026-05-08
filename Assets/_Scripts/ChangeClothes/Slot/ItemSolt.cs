@@ -2,8 +2,9 @@ using System;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using Unity.VisualScripting;
 
-public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
+public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler, IPointerClickHandler
 {
     private bool _isHide;                            // 是否隐藏该部位
     [SerializeField] private Image _imageBg;         // 背景图片
@@ -35,9 +36,20 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             Debug.LogError($"未找到部位: {PartType}");
             return;
         }
+        
+        // 获取或添加Button组件（避免重复添加）
+        Button hideButton = _imageHide.GetComponent<Button>();
+        if (hideButton == null)
+        {
+            hideButton = _imageHide.gameObject.AddComponent<Button>();
+        }
+        // 清除旧的事件监听（避免重复绑定）
+        hideButton.onClick.RemoveAllListeners();
+        // 添加新的事件监听
+        hideButton.onClick.AddListener(OnClickHideButton);
+        
         _imageHide.gameObject.SetActive(!part.IsOnlyEquip);
         EventController.Instance.OnPartChanged += SetItemImage;
-        EventController.Instance.OnClickHided += OnClickHide;
     }
 
     /// <summary>
@@ -103,20 +115,42 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         // UIController.Instance.SetFocusPart(null);
         // _imageSelect.gameObject.SetActive(false);
     }
-    #endregion
 
-
-    #region 隐藏/显示事件
-    public void OnClickHide(PartType partType, bool isHide)
+    /// <summary>
+    /// 鼠标点击槽位时触发 - 取消装备
+    /// </summary>
+    /// <param name="eventData"></param>
+    public void OnPointerClick(PointerEventData eventData)
     {
-        if (PartType != partType) return;
-        _isHide = isHide;
-        _imageHide.gameObject.SetActive(isHide);
-        _imageItem.gameObject.SetActive(!isHide);
+        // 右键点击槽位背景 - 取消装备（非必须装备部位）
+        if (eventData.button == PointerEventData.InputButton.Right)
+        {
+            var part = AvatarSystem.Instance.CurrentCharacterPartByType(PartType);
+            if (part != null && !part.IsOnlyEquip)
+            {
+                EventController.Instance.RaisePartChanged(PartType, -1);
+                Debug.Log($"ItemSolt {PartType}: 点击槽位取消装备");
+            }
+        }
     }
 
     #endregion
 
 
+    #region 隐藏/显示事件
+
+    /// <summary>
+    /// 点击隐藏按钮时触发 - 隐藏/显示部位
+    /// </summary>
+    public void OnClickHideButton()
+    {
+        Debug.Log($"【点击隐藏按钮】ItemSolt {PartType}: ，当前状态: {_isHide}");
+        _isHide = !_isHide;
+        _imageHide.sprite = UIController.Instance.spriteActiveIcons[_isHide ? 0 : 1];
+        EventController.Instance.RaiseClickHide(PartType, !_isHide);
+        // Debug.Log($"ItemSolt {PartType}: 点击隐藏按钮，状态: {_isHide}");
+    }
+
+    #endregion
 
 }

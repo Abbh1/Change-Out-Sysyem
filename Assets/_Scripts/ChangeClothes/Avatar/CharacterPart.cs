@@ -11,7 +11,7 @@ namespace ChangeClothes.Avatar
     public class CharacterPart : MonoBehaviour
     {
         public PartType PartType { get; set; }        // 部件类型
-        public bool IsOnlyEquip { get; set; }                 // 是否独占
+        public bool IsOnlyEquip { get; set; }                 // 是否必须装备
         public float EquipChance { get; set; } = 50f;        // 随机概率
 
         public int CurrentIndex { get; set; } = -1;   // 当前索引
@@ -25,6 +25,11 @@ namespace ChangeClothes.Avatar
 
         private void Awake()
         {
+        }
+
+        private void Start()
+        {
+            // 再次确认初始化
             UpdateMaxLen();
         }
 
@@ -34,6 +39,10 @@ namespace ChangeClothes.Avatar
             Event.OnRandomRequested += RandomPart;
             Event.OnNextPartRequested += NextPart;
             Event.OnPreviousPartRequested += PrevPart;
+            Event.OnClickHided += HandleClickHided;
+
+            // 重新获取最大数量
+            UpdateMaxLen();
         }
 
         private void OnDisable()
@@ -42,6 +51,7 @@ namespace ChangeClothes.Avatar
             Event.OnRandomRequested -= RandomPart;
             Event.OnNextPartRequested -= NextPart;
             Event.OnPreviousPartRequested -= PrevPart;
+            Event.OnClickHided -= HandleClickHided;
         }
 
         #endregion
@@ -58,7 +68,11 @@ namespace ChangeClothes.Avatar
         private void NextPart()
         {
             if (!CanChange()) return;
-            CurrentIndex = (CurrentIndex + 1) % CurrentMaxLen;
+            CurrentIndex++;
+            if (CurrentIndex >= CurrentMaxLen)
+            {
+                CurrentIndex = 1; // 到达最大值后回到1，而不是0
+            }
             Apply();
         }
 
@@ -67,6 +81,16 @@ namespace ChangeClothes.Avatar
             if (!CanChange()) return;
             CurrentIndex = (CurrentIndex - 1 + CurrentMaxLen) % CurrentMaxLen;
             Apply();
+        }
+
+        /// <summary>
+        /// 处理点击隐藏事件
+        /// </summary>
+        private void HandleClickHided(PartType partType, bool isHide)
+        {
+            if (partType != PartType) return;
+            SkinnedMeshRenderer smr = GetComponent<SkinnedMeshRenderer>();
+            if (smr != null) smr.enabled = isHide;
         }
 
         #endregion
@@ -82,12 +106,25 @@ namespace ChangeClothes.Avatar
 
         #region 私有
 
-        private bool CanChange() =>
-            UI && UI.FocusPartType == PartType && CurrentMaxLen > 0;
+        private bool CanChange() => UI && UI.FocusPartType == PartType && CurrentMaxLen > 0;
 
         private void UpdateMaxLen()
         {
-            if (Avatar) CurrentMaxLen = Avatar.GetPartCount(PartType);
+            if (PartType == PartType.None)
+            {
+                Debug.LogWarning($"CharacterPart {gameObject.name}: PartType 未设置");
+                return;
+            }
+            int count = Avatar.GetPartCount(PartType);
+            CurrentMaxLen = count;
+        }
+
+        /// <summary>
+        /// 延迟初始化最大数量
+        /// </summary>
+        private void UpdateMaxLenDelayed()
+        {
+            UpdateMaxLen();
         }
 
         #endregion

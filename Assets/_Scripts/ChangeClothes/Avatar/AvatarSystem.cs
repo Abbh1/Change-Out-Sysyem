@@ -58,7 +58,10 @@ public class AvatarSystem : MonoBehaviour
 
     private void OnDisable()
     {
-        EventController.Instance.OnPartChanged -= ChangePart;
+        if (EventController.Instance != null)
+        {
+            EventController.Instance.OnPartChanged -= ChangePart;
+        }
     }
     #endregion
 
@@ -266,6 +269,20 @@ public class AvatarSystem : MonoBehaviour
     Dictionary<PartType, SkinnedMeshRenderer> smr,
     Transform[] hips)
     {
+        // 特殊处理：num为-1表示取消装备，隐藏该部位
+        if (num < 0)
+        {
+            if (smr.ContainsKey(part) && smr[part] != null)
+            {
+                smr[part].sharedMesh = null;  // 清空网格
+                smr[part].materials = new Material[0];  // 清空材质
+                currentPartNumbers[part] = -1;
+                Debug.Log($"取消装备: {part}");
+                return true;
+            }
+            return false;
+        }
+        
         // 空值检查
         if (data == null || !data.ContainsKey(part) || !data[part].ContainsKey(num))
         {
@@ -344,6 +361,7 @@ public class AvatarSystem : MonoBehaviour
     {
         ChangeMesh(partType, index, characterData, characterSmr, characterHips);
     }
+
     #endregion
 
 
