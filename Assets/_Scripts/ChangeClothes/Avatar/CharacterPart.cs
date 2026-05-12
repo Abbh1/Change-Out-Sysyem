@@ -58,10 +58,11 @@ namespace ChangeClothes.Avatar
 
         #region 事件
 
-        private void RandomPart()
+        private void RandomPart()   
         {
-            if (!CanChange()) return;
-            CurrentIndex = UnityEngine.Random.Range(0, CurrentMaxLen);
+            // Debug.Log($"随机换装 {PartType}");
+            // if (!CanChange()) return;
+            CurrentIndex = UnityEngine.Random.Range(1, CurrentMaxLen);
             Apply();
         }
 
@@ -90,7 +91,7 @@ namespace ChangeClothes.Avatar
         {
             if (partType != PartType) return;
             SkinnedMeshRenderer smr = GetComponent<SkinnedMeshRenderer>();
-            if (smr != null) smr.enabled = isHide;
+            smr.enabled = !isHide;
         }
 
         #endregion
@@ -112,19 +113,11 @@ namespace ChangeClothes.Avatar
         {
             if (PartType == PartType.None)
             {
-                Debug.LogWarning($"CharacterPart {gameObject.name}: PartType 未设置");
+                // Debug.LogWarning($"CharacterPart {gameObject.name}: PartType 未设置");
                 return;
             }
             int count = Avatar.GetPartCount(PartType);
             CurrentMaxLen = count;
-        }
-
-        /// <summary>
-        /// 延迟初始化最大数量
-        /// </summary>
-        private void UpdateMaxLenDelayed()
-        {
-            UpdateMaxLen();
         }
 
         #endregion

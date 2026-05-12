@@ -50,6 +50,9 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         
         _imageHide.gameObject.SetActive(!part.IsOnlyEquip);
         EventController.Instance.OnPartChanged += SetItemImage;
+        
+        // 关键：初始化时立即显示当前装备的图片
+        SetItemImage(PartType, part.CurrentIndex);
     }
 
     /// <summary>
@@ -78,7 +81,7 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
         string name = $"{PartType}_{index}";
         string url = $"ChangeClothes/ScreenShot/{name}";
         Debug.Log($"加载部位图片: {url}");
-        _imageItem.sprite = UIController.Instance.GetSprite(url);
+        _imageItem.sprite = UIController.GetSprite(url);
     }
 
     #endregion
@@ -145,9 +148,8 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     public void OnClickHideButton()
     {
         Debug.Log($"【点击隐藏按钮】ItemSolt {PartType}: ，当前状态: {_isHide}");
-        _isHide = !_isHide;
         _imageHide.sprite = UIController.Instance.spriteActiveIcons[_isHide ? 0 : 1];
-        EventController.Instance.RaiseClickHide(PartType, !_isHide);
+        EventController.Instance.RaiseClickHide(PartType, _isHide);
         // Debug.Log($"ItemSolt {PartType}: 点击隐藏按钮，状态: {_isHide}");
     }
 

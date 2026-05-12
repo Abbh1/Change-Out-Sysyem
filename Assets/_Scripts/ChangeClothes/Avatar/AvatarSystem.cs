@@ -37,31 +37,27 @@ public class AvatarSystem : MonoBehaviour
     #region Unity生命周期
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            characterData = new Dictionary<PartType, Dictionary<int, SkinnedMeshRenderer>>();
-            characterSmr = new Dictionary<PartType, SkinnedMeshRenderer>();
-            currentPartNumbers = new Dictionary<PartType, int>();
-            boneMap = new Dictionary<string, Transform>();
-        }
-        else
+        if (Instance != null)
         {
             Destroy(gameObject);
+            return;
         }
+
+        Instance = this;
+        characterData = new Dictionary<PartType, Dictionary<int, SkinnedMeshRenderer>>();
+        characterSmr = new Dictionary<PartType, SkinnedMeshRenderer>();
+        currentPartNumbers = new Dictionary<PartType, int>();
+        boneMap = new Dictionary<string, Transform>();
     }
 
     private void OnEnable()
     {
-        EventController.Instance.OnPartChanged += ChangePart;
+        if (EventController.Instance != null) EventController.Instance.OnPartChanged += ChangePart;
     }
 
     private void OnDisable()
     {
-        if (EventController.Instance != null)
-        {
-            EventController.Instance.OnPartChanged -= ChangePart;
-        }
+        if (EventController.Instance != null) EventController.Instance.OnPartChanged -= ChangePart;
     }
     #endregion
 
@@ -282,7 +278,7 @@ public class AvatarSystem : MonoBehaviour
             }
             return false;
         }
-        
+
         // 空值检查
         if (data == null || !data.ContainsKey(part) || !data[part].ContainsKey(num))
         {
@@ -326,7 +322,8 @@ public class AvatarSystem : MonoBehaviour
             targetSmr.materials = skm.materials;    // 更新材质
             targetSmr.sharedMesh = skm.sharedMesh;  // 更新网格
             currentPartNumbers[part] = num;
-            Debug.Log($"换装成功: {part} - {num}");
+            // CurrentCharacterPartByType(part).CurrentIndex = num;  // 更新CharacterPart的CurrentIndex
+            // Debug.Log($"换装成功: {part} - {num}");
             return true;
         }
         else

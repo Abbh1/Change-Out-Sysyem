@@ -50,7 +50,7 @@ MonoBehaviour:
   - index: 7
     parts:
     - partType: 8
-      value: 2
+      value: 1
     - partType: 1
       value: -1
     - partType: 2

@@ -6,10 +6,13 @@ public class UIController : MonoBehaviour
 {
     public static UIController Instance { get; private set; }
     public PartType FocusPartType { get; private set; }
+    public PresetData presetData;  // 预设数据
 
     [Header("UI组件")]
     [SerializeField] private GameObject itemFocusSlot;      // 物品焦点槽位
     [SerializeField] private ItemSolt[] itemSlots;
+    [SerializeField] private Transform presetListTrans; // 预设列表父节点
+    [SerializeField] private GameObject presetPerfab;   // 预设槽位预制体
 
     [Header("图标资源")]
     public Sprite[] spriteActiveIcons;  // 激活状态图标（显示/隐藏）
@@ -17,22 +20,58 @@ public class UIController : MonoBehaviour
     private ItemSolt currentHoverSlot;
 
 
-    private void Awake()    
+    private void Awake()
     {
+        if (Instance != null)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
     public void Init()
     {
+        InitSolt();
+    }
+
+    /// <summary>
+    /// 初始化槽位
+    /// </summary>
+    public void InitSolt()
+    {
         // 初始化物品槽位
         itemSlots = transform.GetComponentsInChildren<ItemSolt>();
         foreach (var slot in itemSlots)
         {
-            slot.InitSolt();
+            if (slot != null)
+            {
+                slot.InitSolt();
+            }
+        }
+
+        // 预设槽位
+        InitPresetSolt();
+    }
+
+    private void InitPresetSolt()
+    {
+        foreach (var preset in presetData.presetItems)
+        {
+            if (preset == null) continue;
+
+            GameObject presetSolt = Instantiate(presetPerfab, presetListTrans);
+            PresetSolt presetSoltComponent = presetSolt.GetComponent<PresetSolt>();
+
+            if (presetSoltComponent != null)
+            {
+                presetSoltComponent.Init(preset.index);
+            }
         }
     }
 
+    #region 聚焦
     /// <summary>
     /// 设置当前聚焦的部位槽位
     /// </summary>
@@ -61,13 +100,17 @@ public class UIController : MonoBehaviour
         itemFocusSlot.transform.position = itemSlot.transform.position;
         itemFocusSlot.SetActive(true);
     }
+    #endregion
+
+
+    #region 工具方法
 
     /// <summary>
     /// 从Resources文件夹中加载Sprite
     /// </summary>
     /// <param name="spriteName"></param>
     /// <returns></returns>
-    public Sprite GetSprite(string spriteName)
+    public static Sprite GetSprite(string spriteName)
     {
         if (string.IsNullOrEmpty(spriteName))
         {
@@ -99,5 +142,6 @@ public class UIController : MonoBehaviour
         return null;
         // return Sprite.Create(tex, new Rect(0, 0, tex.width, tex.height), new Vector2(0.5f, 0.5f));
     }
+    #endregion
 
 }

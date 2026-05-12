@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d28cd67629599224caf148fcb14974a2, type: 3}
+  m_Name: PresetData
+  m_EditorClassIdentifier: Assembly-CSharp::PresetData
+  presetItems:
+  - index: 1
+    parts:
+    - partType: 1
+      partIndex: 1
+    - partType: 3
+      partIndex: 1
+    - partType: 4
+      partIndex: 1
+    - partType: 5
+      partIndex: 1
+    - partType: 6
+      partIndex: 1
+    - partType: 7
+      partIndex: 1
+    - partType: 8
+      partIndex: 1
+    - partType: 9
+      partIndex: 1
+    - partType: 10
+      partIndex: 1
+    - partType: 11
+      partIndex: 1
+    - partType: 13
+      partIndex: 1
+    - partType: 14
+      partIndex: 1
+  - index: 2
+    parts:
+    - partType: 1
+      partIndex: 2
+    - partType: 3
+      partIndex: 2
+    - partType: 4
+      partIndex: 2
+    - partType: 5
+      partIndex: 2
+    - partType: 6
+      partIndex: 2
+    - partType: 7
+      partIndex: 2
+    - partType: 8
+      partIndex: 2
+    - partType: 9
+      partIndex: 2
+    - partType: 10
+      partIndex: 2
+    - partType: 11
+      partIndex: 2
+    - partType: 13
+      partIndex: 2
+    - partType: 14
+      partIndex: 2
