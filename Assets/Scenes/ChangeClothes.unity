@@ -525,6 +525,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4a05f018374f0b3409be9d037b2283a5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::ChangeOutController
+  spawnPoint: {fileID: 0}
 --- !u!4 &114486529
 Transform:
   m_ObjectHideFlags: 0
@@ -1870,8 +1871,8 @@ Camera:
   m_GameObject: {fileID: 330585543}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 1
-  m_BackGroundColor: {r: 0.19215687, g: 0.3019608, b: 0.4745098, a: 0}
+  m_ClearFlags: 2
+  m_BackGroundColor: {r: 1, g: 1, b: 1, a: 1}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
   m_FOVAxisMode: 0
@@ -2046,6 +2047,50 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 357083813}
   m_CullTransparentMesh: 1
+--- !u!1 &362654165
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 362654167}
+  - component: {fileID: 362654166}
+  m_Layer: 0
+  m_Name: EquipDataManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &362654166
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 362654165}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0238cc8c859ff044599f2b925241231f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::ChangeClothes.Data.EquipDataManager
+--- !u!4 &362654167
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 362654165}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &364232520
 GameObject:
   m_ObjectHideFlags: 0
@@ -2389,7 +2434,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 248.63, y: 106}
+  m_AnchoredPosition: {x: 248.63, y: 36}
   m_SizeDelta: {x: 426.73, y: 684.44}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!1 &410087039
@@ -6392,7 +6437,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &1073423265
 RectTransform:
   m_ObjectHideFlags: 0
@@ -6643,7 +6688,7 @@ Transform:
   m_GameObject: {fileID: 1189692126}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: 0.041348692, z: -0, w: 0.99914485}
-  m_LocalPosition: {x: 0, y: -1.66, z: 0}
+  m_LocalPosition: {x: 0, y: -1.586459, z: 0}
   m_LocalScale: {x: 4.5, y: 4.5, z: -4.5}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -7525,7 +7570,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 1299.8, y: 313}
+  m_AnchoredPosition: {x: 1299.8, y: 243.00002}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1470616372
@@ -8558,7 +8603,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1688433580}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2126821132}
+        m_TargetAssemblyTypeName: UIController, Assembly-CSharp
+        m_MethodName: OnSaveAndLoadSceneButtonClicked
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1688433580
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9088,7 +9145,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -685, y: 56}
+  m_AnchoredPosition: {x: -685, y: -13.999985}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1815891770
@@ -9900,7 +9957,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 6514261651377973968, guid: d59e22aec3faefc4fb31f628b0c178d5, type: 3}
       propertyPath: m_LocalPosition.y
-      value: -1.66
+      value: -1.5864587
       objectReference: {fileID: 0}
     - target: {fileID: 6514261651377973968, guid: d59e22aec3faefc4fb31f628b0c178d5, type: 3}
       propertyPath: m_LocalPosition.z
@@ -10934,6 +10991,30 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1581220187}
     m_Modifications:
+    - target: {fileID: 474838828377110171, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_SizeDelta.x
+      value: 178.79
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332827574904807544, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_Sprite
+      value: 
+      objectReference: {fileID: 21300000, guid: 5592c7b8f1cd1f04eb14c054d51b8d7c, type: 3}
+    - target: {fileID: 3332827574904807544, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_Color.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332827574904807544, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_Color.b
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332827574904807544, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_Color.g
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3332827574904807544, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
+      propertyPath: m_Color.r
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4213629437157933264, guid: e7128f8941f52d945a693d010bee4dbf, type: 3}
       propertyPath: m_Pivot.x
       value: 0.5
@@ -11042,4 +11123,5 @@ SceneRoots:
   - {fileID: 1675435635}
   - {fileID: 114486529}
   - {fileID: 439576693}
+  - {fileID: 362654167}
   - {fileID: 973251159}

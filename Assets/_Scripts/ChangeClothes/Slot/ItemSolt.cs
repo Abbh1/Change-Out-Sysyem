@@ -37,22 +37,27 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             return;
         }
         
-        // 获取或添加Button组件（避免重复添加）
         Button hideButton = _imageHide.GetComponent<Button>();
         if (hideButton == null)
         {
             hideButton = _imageHide.gameObject.AddComponent<Button>();
         }
-        // 清除旧的事件监听（避免重复绑定）
         hideButton.onClick.RemoveAllListeners();
-        // 添加新的事件监听
         hideButton.onClick.AddListener(OnClickHideButton);
         
         _imageHide.gameObject.SetActive(!part.IsOnlyEquip);
         EventController.Instance.OnPartChanged += SetItemImage;
         
-        // 关键：初始化时立即显示当前装备的图片
         SetItemImage(PartType, part.CurrentIndex);
+    }
+
+    private void OnDestroy()
+    {
+        // 取消订阅事件，避免场景切换后触发已销毁对象的方法
+        if (EventController.Instance != null)
+        {
+            EventController.Instance.OnPartChanged -= SetItemImage;
+        }
     }
 
     /// <summary>
@@ -62,25 +67,40 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     /// <param name="index">索引</param>
     private void SetItemImage(PartType partType, int index)
     {
+        // 空值检查：如果对象已销毁或组件不存在，直接返回
+        if (this == null || _imageItem == null || _imageBg == null)
+        {
+            return;
+        }
+        
         if (PartType != partType) return;
 
         if (index < 0)
         {
-            // 没有装备
             _imageItem.gameObject.SetActive(false);
-            _imageHide.gameObject.SetActive(false);
-            _imageBg.sprite = UIController.Instance.spriteBgs[0];
+            if (_imageHide != null)
+            {
+                _imageHide.gameObject.SetActive(false);
+            }
+            if (UIController.Instance != null)
+            {
+                _imageBg.sprite = UIController.Instance.spriteBgs[0];
+            }
             return;
         }
 
-        // 有装备
         _imageItem.gameObject.SetActive(true);
-        _imageHide.gameObject.SetActive(true);
-        _imageBg.sprite = UIController.Instance.spriteBgs[1];
+        if (_imageHide != null)
+        {
+            _imageHide.gameObject.SetActive(true);
+        }
+        if (UIController.Instance != null)
+        {
+            _imageBg.sprite = UIController.Instance.spriteBgs[1];
+        }
 
         string name = $"{PartType}_{index}";
         string url = $"ChangeClothes/ScreenShot/{name}";
-        Debug.Log($"加载部位图片: {url}");
         _imageItem.sprite = UIController.GetSprite(url);
     }
 
@@ -132,7 +152,7 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
             if (part != null && !part.IsOnlyEquip)
             {
                 EventController.Instance.RaisePartChanged(PartType, -1);
-                Debug.Log($"ItemSolt {PartType}: 点击槽位取消装备");
+                // Debug.Log($"ItemSolt {PartType}: 点击槽位取消装备");
             }
         }
     }
@@ -147,9 +167,10 @@ public class ItemSolt : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     /// </summary>
     public void OnClickHideButton()
     {
+        _isHide = !_isHide;
         Debug.Log($"【点击隐藏按钮】ItemSolt {PartType}: ，当前状态: {_isHide}");
-        _imageHide.sprite = UIController.Instance.spriteActiveIcons[_isHide ? 0 : 1];
         EventController.Instance.RaiseClickHide(PartType, _isHide);
+        _imageHide.sprite = UIController.Instance.spriteActiveIcons[_isHide ? 0 : 1];
         // Debug.Log($"ItemSolt {PartType}: 点击隐藏按钮，状态: {_isHide}");
     }
 

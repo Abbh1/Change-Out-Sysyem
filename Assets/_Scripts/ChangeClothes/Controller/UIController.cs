@@ -1,6 +1,9 @@
 using System.IO;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.SceneManagement;
+using ChangeClothes.Avatar;
+using ChangeClothes.Data;
 
 public class UIController : MonoBehaviour
 {
@@ -28,7 +31,6 @@ public class UIController : MonoBehaviour
             return;
         }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
     }
 
     public void Init()
@@ -57,6 +59,7 @@ public class UIController : MonoBehaviour
 
     private void InitPresetSolt()
     {
+        int index = 1;
         foreach (var preset in presetData.presetItems)
         {
             if (preset == null) continue;
@@ -68,6 +71,7 @@ public class UIController : MonoBehaviour
             {
                 presetSoltComponent.Init(preset.index);
             }
+            index++;
         }
     }
 
@@ -102,6 +106,31 @@ public class UIController : MonoBehaviour
     }
     #endregion
 
+
+    #region 换装数据保存/加载
+
+    /// <summary>
+    /// 清除保存的换装配置（供UI按钮调用）
+    /// </summary>
+    public void OnClearEquipButtonClicked()
+    {
+        EquipDataManager.Instance.ClearSavedEquip();
+        Debug.Log("清除按钮已点击");
+    }
+
+    /// <summary>
+    /// 保存换装配置并跳转到 PlayGame 场景（供UI按钮调用）
+    /// </summary>
+    public void OnSaveAndLoadSceneButtonClicked()
+    {
+        var currentConfig = AvatarSystem.Instance.GetCurrentEquipConfig();
+        EquipDataManager.Instance.SaveEquipData(currentConfig);
+        Debug.Log("换装配置已保存，准备跳转到 PlayGame 场景");
+        
+        SceneManager.LoadScene("PlayGame");
+    }
+
+    #endregion
 
     #region 工具方法
 

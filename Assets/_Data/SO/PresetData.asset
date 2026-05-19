@@ -39,6 +39,8 @@ MonoBehaviour:
       partIndex: 1
     - partType: 14
       partIndex: 1
+    - partType: 12
+      partIndex: 1
   - index: 2
     parts:
     - partType: 1
@@ -65,3 +67,5 @@ MonoBehaviour:
       partIndex: 2
     - partType: 14
       partIndex: 2
+    - partType: 12
+      partIndex: 4

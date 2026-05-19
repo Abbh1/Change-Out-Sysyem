@@ -64,7 +64,7 @@ public class AvatarSystem : MonoBehaviour
 
     #region 初始化模型
     /// <summary>
-    /// 初始化角色模型，加载数据并设置默认装备
+    /// 初始化角色模型（ChangeClothes 场景使用）
     /// </summary>
     public void Init()
     {
@@ -76,6 +76,43 @@ public class AvatarSystem : MonoBehaviour
 
         InitSourceCharacter(); // 初始化源模型
         InitTargetCharacter(); // 初始化目标模型
+        SaveData(characterSourceTrans, characterData, characterSmr, characterTarget);
+    }
+
+    /// <summary>
+    /// 初始化角色模型（非 ChangeClothes 场景使用，从已有角色读取）
+    /// </summary>
+    /// <param name="existingCharacter">场景中已存在的角色对象</param>
+    public void InitFromExistingCharacter(GameObject existingCharacter)
+    {
+        if (characterModelPrefab == null)
+        {
+            Debug.LogError("角色模型预制体未设置！");
+            return;
+        }
+
+        if (existingCharacter == null)
+        {
+            Debug.LogError("传入的角色对象为空！");
+            return;
+        }
+
+        characterTarget = existingCharacter;
+        
+        // 查找 Bone 子物体
+        Transform boneRoot = characterTarget.transform.Find("Bone");
+        if (boneRoot != null)
+        {
+            characterHips = boneRoot.GetComponentsInChildren<Transform>(true);
+        }
+        else
+        {
+            Debug.LogWarning("目标模型中未找到 Bone 节点，将查找所有子物体");
+            characterHips = characterTarget.GetComponentsInChildren<Transform>(true);
+        }
+
+        CreateBoneDictionary();
+        InitSourceCharacter(); // 初始化源模型（用于获取换装数据）
         SaveData(characterSourceTrans, characterData, characterSmr, characterTarget);
     }
 
@@ -397,6 +434,22 @@ public class AvatarSystem : MonoBehaviour
     public Dictionary<PartType, int> GetAllPartCounts()
     {
         return characterData.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Count);
+    }
+
+    /// <summary>
+    /// 获取当前所有部位的配置数据
+    /// </summary>
+    public Dictionary<PartType, int> GetCurrentEquipConfig()
+    {
+        return new Dictionary<PartType, int>(currentPartNumbers);
+    }
+
+    /// <summary>
+    /// 获取角色目标对象的 Transform（用于场景切换时移动角色）
+    /// </summary>
+    public Transform GetCharacterTargetTransform()
+    {
+        return characterTarget != null ? characterTarget.transform : null;
     }
 
     #endregion
